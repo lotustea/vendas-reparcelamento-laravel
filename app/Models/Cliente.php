@@ -9,8 +9,8 @@ class Cliente extends Model
 {
     use HasFactory;
 
-    public function comments()
+    public function vendas()
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Venda::class);
     }
 }
