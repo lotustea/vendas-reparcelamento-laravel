@@ -8,3 +8,4 @@
 - Nginx
 - Mysql
 - Docker
+- Git flow
