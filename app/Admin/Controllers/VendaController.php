@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Tables\ParcelasTable;
 use App\Models\Venda;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
@@ -31,36 +32,8 @@ class VendaController extends AdminController
         $grid->column('id_cliente', __('Id cliente'));
         $grid->column('total', __('Total'));
         $grid->column('entrada', __('Entrada'));
-        $grid->column('parcelas_vendas', 'Parcelas')
-            ->expand(function ($model) {
-                $parcelas = $model->parcelas()->take(10)->get()->map(function ($parcela) {
-                return
-                    $parcela
-                        ->only([
-                            'parcela',
-                            'vencimento',
-                            'valor_parcela',
-                            'valor_pago',
-                            'valor_abatido',
-                            'valor_extra',
-                            'pagamento',
-                            'status'
-                        ]);
-            });
-                return new Table([
-                    'parcela',
-                    'vencimento',
-                    'valor_parcela',
-                    'valor_pago',
-                    'valor_abatido',
-                    'valor_extra',
-                    'pagamento',
-                    'status'
-                ],
-                    $parcelas->toArray()
-                );
-        });
-
+        $grid->column('parcelas_vendas', 'Parcelas');
+        new ParcelasTable($grid->column('parcelas_vendas', 'Parcelas'));
         $grid->column('data_compra', __('Data compra'));
         $grid->column('status', __('Status'));
 
