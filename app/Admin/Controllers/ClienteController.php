@@ -2,7 +2,9 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Tables\VendasTable;
 use App\Models\Cliente;
+use App\Models\ClienteEmAtraso;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -24,8 +26,7 @@ class ClienteController extends AdminController
      */
     protected function grid()
     {
-        $grid = new Grid(new Cliente());
-
+        $grid = new Grid(new ClienteEmAtraso());
         $grid->column('nome', __('Nome'));
         $grid->column('cpf', __('Cpf'));
         $grid->column('email', __('Email'));
@@ -34,11 +35,7 @@ class ClienteController extends AdminController
         $grid->column('cidade', __('Cidade'));
         $grid->column('indicacao', __('Indicacao'));
         $grid->column('data_nascimento', __('Data nascimento'));
-
-        $grid->rows(function (Grid\Row $row) {
-            $rota = route('admin.cliente.show', ['cliente' => $row->getKey()]);
-            $row->setAttributes(['onclick' => "location.href='$rota'"]);
-        });
+        new VendasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
 
         return $grid;
     }

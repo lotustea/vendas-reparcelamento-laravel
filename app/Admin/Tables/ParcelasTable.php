@@ -1,7 +1,6 @@
 <?php
 namespace App\Admin\Tables;
 
-use App\Models\Venda;
 use Encore\Admin\Widgets\Table;
 
 class ParcelasTable
