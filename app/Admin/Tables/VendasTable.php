@@ -54,7 +54,7 @@ class VendasTable
                 ],
                     $vendas->toArray()
                 );
-                $tabela->view();
+
                 return $tabela;
             }
         );

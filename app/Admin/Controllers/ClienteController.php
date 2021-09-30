@@ -9,6 +9,8 @@ use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Encore\Admin\Widgets\Box;
+use function GuzzleHttp\Promise\all;
 
 class ClienteController extends AdminController
 {
@@ -19,6 +21,12 @@ class ClienteController extends AdminController
      */
     protected $title = 'Cliente';
 
+    private ClienteEmAtraso $modelo;
+
+    public function __construct()
+    {
+        $this->modelo = new ClienteEmAtraso();
+    }
     /**
      * Make a grid builder.
      *
@@ -27,6 +35,15 @@ class ClienteController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new ClienteEmAtraso());
+
+        $grid->header(function () {
+            $totalAReceber = $this->modelo->get()->sum('total_devido');
+
+            $view = view('admin.table.partials.total-a-receber', compact('totalAReceber'));
+
+            return new Box('Total a Receber', $view);
+        });
+
         $grid->column('nome', __('Nome'));
         $grid->column('cpf', __('Cpf'));
         $grid->column('email', __('Email'));

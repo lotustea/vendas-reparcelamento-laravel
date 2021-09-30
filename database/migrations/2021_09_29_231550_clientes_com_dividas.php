@@ -10,9 +10,12 @@ class ClientesComDividas extends Migration
     {
         DB::statement(
             "CREATE VIEW clientes_em_atraso AS
-                        select clientes.* from clientes
+                        select clientes.*, sum(venda_parcelas.valor_parcela) as total_devido from clientes
                         inner join vendas on clientes.id = vendas.id_cliente
-                        where vendas.status = 0
+                        left join venda_parcelas on vendas.id = venda_parcelas.id_venda
+                        where venda_parcelas.vencimento < CURDATE( )
+                        and venda_parcelas.status = 0
+                        and vendas.status = 0
                         group by clientes.id"
         );
     }

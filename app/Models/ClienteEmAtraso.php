@@ -17,4 +17,5 @@ class ClienteEmAtraso extends Model
             ->where('status', '=', '0');
     }
 
+
 }
