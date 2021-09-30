@@ -1,3 +1,3 @@
 <h2>
-    {{ $totalAReceber }}
+    R${{ $totalAReceber }}
 </h2>

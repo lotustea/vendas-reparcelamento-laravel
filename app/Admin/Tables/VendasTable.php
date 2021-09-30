@@ -2,7 +2,9 @@
 namespace App\Admin\Tables;
 
 use Encore\Admin\Widgets\Table;
-use App\Admin\Helpers\Methods as Methods;
+use Encore\Admin\Widgets\Tab;
+
+use App\Admin\Helpers\Methods;
 
 class VendasTable
 {

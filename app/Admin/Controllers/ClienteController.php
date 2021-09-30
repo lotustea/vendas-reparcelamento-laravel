@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasTable;
 use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
@@ -21,12 +22,16 @@ class ClienteController extends AdminController
      */
     protected $title = 'Cliente';
 
+    private $methods;
+
     private ClienteEmAtraso $modelo;
 
     public function __construct()
     {
         $this->modelo = new ClienteEmAtraso();
+        $this->methods = new Methods();
     }
+
     /**
      * Make a grid builder.
      *
@@ -37,7 +42,7 @@ class ClienteController extends AdminController
         $grid = new Grid(new ClienteEmAtraso());
 
         $grid->header(function () {
-            $totalAReceber = $this->modelo->get()->sum('total_devido');
+            $totalAReceber = $this->methods->toReal($this->modelo->get()->sum('total_devido'));
 
             $view = view('admin.table.partials.total-a-receber', compact('totalAReceber'));
 
@@ -53,6 +58,10 @@ class ClienteController extends AdminController
         $grid->column('indicacao', __('Indicacao'));
         $grid->column('data_nascimento', __('Data nascimento'));
         new VendasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
+        $grid->column('total_devido', 'Total Devido')
+            ->display(function () {
+                return 'R$' . $this->total_devido;
+            });
 
         return $grid;
     }
@@ -68,46 +77,46 @@ class ClienteController extends AdminController
         $show = new Show(Cliente::findOrFail($id));
 
         $show->field('nome', __('Nome'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('cpf', __('Cpf'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('email', __('Email'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('telefone', __('Telefone'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('telefone2', __('Telefone2'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('cep', __('Cep'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('estado', __('Estado'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('cidade', __('Cidade'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('bairro', __('Bairro'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('rua', __('Rua'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('numero', __('Numero'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('complemento_comercial', __('Complemento comercial'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('indicacao', __('Indicacao'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         $show->field('data_nascimento', __('Data nascimento'))
-            ->setWidth(5,5);
+            ->setWidth(5, 5);
 
         return $show;
     }
