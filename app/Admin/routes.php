@@ -23,4 +23,8 @@ Route::group([
 
     $router->resource('produtos', ProdutoController::class);
 
+    $router->resource('reparcelamentos', ReparcelamentoController::class);
+
+    $router->resource('reparcelamento-parcelas', ReparcelamentoParcelaController::class);
+
 });

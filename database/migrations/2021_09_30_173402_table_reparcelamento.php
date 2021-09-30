@@ -13,7 +13,7 @@ class TableReparcelamento extends Migration
      */
     public function up()
     {
-        Schema::create('reparcelamento', function (Blueprint $table) {
+        Schema::create('reparcelamentos', function (Blueprint $table) {
             $table->id();
             $table->integer('cliente_id');
             $table->float('valor_total');
