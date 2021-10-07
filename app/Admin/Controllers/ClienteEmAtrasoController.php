@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\ClienteNegociarDividaAction;
 use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasTable;
 use App\Models\Cliente;
@@ -11,16 +12,17 @@ use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
 use Encore\Admin\Widgets\Box;
+use Illuminate\Support\Facades\Request;
 use function GuzzleHttp\Promise\all;
 
-class ClienteController extends AdminController
+class ClienteEmAtrasoController extends AdminController
 {
     /**
      * Title for current resource.
      *
      * @var string
      */
-    protected $title = 'Cliente';
+    protected $title = 'Cliente em atraso';
 
     private $methods;
 
@@ -28,7 +30,6 @@ class ClienteController extends AdminController
 
     public function __construct()
     {
-        $this->modelo = new ClienteEmAtraso();
         $this->methods = new Methods();
     }
 
@@ -42,13 +43,15 @@ class ClienteController extends AdminController
         $grid = new Grid(new ClienteEmAtraso());
 
         $grid->header(function () {
-            $totalAReceber = $this->methods->toReal($this->modelo->get()->sum('total_devido'));
 
-            $view = view('admin.table.partials.total-a-receber', compact('totalAReceber'));
+            $view = view('admin.table.partials.total-a-receber');
 
             return new Box('Total a Receber', $view);
         });
 
+        $grid->actions(function ($actions) {
+            $actions->add(new ClienteNegociarDividaAction());
+        });
         $grid->column('nome', __('Nome'));
         $grid->column('cpf', __('Cpf'));
         $grid->column('email', __('Email'));
@@ -58,9 +61,10 @@ class ClienteController extends AdminController
         $grid->column('indicacao', __('Indicacao'));
         $grid->column('data_nascimento', __('Data nascimento'));
         new VendasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
+        $totalDevido = ClienteEmAtraso::totalDevido($this->getKey());
         $grid->column('total_devido', 'Total Devido')
-            ->display(function () {
-                return 'R$' . $this->total_devido;
+            ->display(function () use ($totalDevido) {
+                return 'R$' . $totalDevido;
             });
 
         return $grid;
@@ -154,5 +158,10 @@ class ClienteController extends AdminController
         $form->text('senha', __('Senha'));
 
         return $form;
+    }
+
+    public function totalDividendos()
+    {
+        return ClienteEmAtraso::totalDividendos();
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ClienteEmAtraso;
 use Illuminate\Routing\Router;
 
 Admin::routes();
@@ -13,7 +14,11 @@ Route::group([
 
     $router->get('/', 'HomeController@index')->name('home');
 
-    $router->resource('clientes', ClienteController::class);
+    $router->get('total-dividendos', function () {
+        return ClienteEmAtraso::totalDividendos(true);
+    });
+
+    $router->resource('clientes-em-atraso', ClienteEmAtrasoController::class);
 
     $router->resource('vendas', VendaController::class);
 

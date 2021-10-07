@@ -70,7 +70,6 @@ class ReparcelamentoController extends AdminController
     protected function form()
     {
         $form = new Form(new Reparcelamento());
-
         $form->number('cliente_id', __('Cliente id'));
         $form->decimal('valor_total', __('Valor total'));
         $form->number('parcelas', __('Parcelas'));

@@ -9,7 +9,12 @@ class Venda extends Model
 {
     use HasFactory;
 
-    public function cliente()
+    public function clienteEmAtraso()
+    {
+        return $this->belongsTo(ClienteEmAtraso::class);
+    }
+
+    public function clientes()
     {
         return $this->belongsTo(Cliente::class);
     }

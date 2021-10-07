@@ -5,12 +5,12 @@ namespace App\Admin\Helpers;
 class Methods
 {
 
-    public function toReal($price)
+    public static function toReal($price)
     {
         return number_format($price, 2, ',', '.');
     }
 
-    public function toFloat($price)
+    public static function toFloat($price)
     {
         $price = str_replace('R$ ', '', $price);
         $price = str_replace('.', '', $price);
@@ -18,12 +18,12 @@ class Methods
         return $price;
     }
 
-    public function newDate()
+    public static function newDate()
     {
         return date('d-m-Y H:m:s');
     }
 
-    public function newDateDb()
+    public static  function newDateDb()
     {
         return date('Y-m-d H:m:s');
     }
