@@ -4,29 +4,46 @@ namespace App\Admin\Actions;
 
 use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
+use App\Models\ReparcelamentoParcela;
 use Encore\Admin\Actions\RowAction;
 use Encore\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Throwable;
 
 
 class ClienteNegociarDividaAction extends RowAction
 {
     public $name = 'Renegociar Dívidas';
+    private $reparcelamento;
 
-    public function handle(Model $model, Request $request)
+    public function handle(Model $model, Request $request): \Encore\Admin\Actions\Response
     {
+        dd($request->all());
         $id = $this->row()->getKey();
         $cliente = $model->find($id);
+        $valorTotal = $request->input('primeiro_vencimento' . $id);
+        $entrada = $request->input('primeiro_vencimento' . $id);
+        $parcelas = $request->input('primeiro_vencimento' . $id);
+        $vencimento = $request->input('primeiro_vencimento' . $id);
 
-        DB::transaction(function () use ($cliente){
-            $this->quitarParcelasMaisVendas($cliente);
-        });
-        return $this->response()->success('Success message.')->refresh();
+        try {
+            DB::transaction(function () use ($cliente, $valorTotal, $entrada, $vencimento, $parcelas){
+                $this->reparcelamento =
+                    $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
+                $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
+                $this->quitarParcelasMaisVendas($cliente);
+            });
+
+            return $this->response()->success('Success message.' )->refresh();
+        } catch (Throwable $e) {
+            return $this->response()->error($e);
+        }
     }
 
-    public function form(Model $model)
+    public function form(Model $model): void
     {
         $id = $this->row()->getKey();
         $cliente = $model->find($id);
@@ -92,7 +109,7 @@ class ClienteNegociarDividaAction extends RowAction
      * Busca e quita todas as parcelas e vendas em atraso do cliente
      * @param ClienteEmAtraso $cliente
      */
-    private function quitarParcelasMaisVendas(ClienteEmAtraso $cliente)
+    private function quitarParcelasMaisVendas(ClienteEmAtraso $cliente): void
     {
         $vendas = $cliente->vendas();
         foreach ($vendas as $venda) {
@@ -112,32 +129,44 @@ class ClienteNegociarDividaAction extends RowAction
      * @param ClienteEmAtraso $cliente
      * @param $valorTotal
      * @param $entrada
-     * @param $vencimento
      * @param $parcelas
+     * @return Reparcelamento
      */
-    private function criarReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $parcelas)
+    private function criarReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $parcelas): Reparcelamento
     {
         $reparcelamento = new Reparcelamento();
         $reparcelamento->cliente = $cliente;
         $reparcelamento->entrada = $entrada;
         $reparcelamento->parcelas = $parcelas;
         $reparcelamento->valor_total = $valorTotal;
+        $reparcelamento->vendas_abatidas = $cliente->vendas()->get()->toJson();
+        $reparcelamento->save();
 
-
+        return $reparcelamento;
     }
 
     /**
      * Cria as parcelas do reparcelamento
      *
-     * @param Reparcelamento $reparcelamento
      * @param $valorTotal
      * @param $entrada
      * @param $vencimento
      * @param $parcelas
      */
-    private function criarParcelas(Reparcelamento $reparcelamento, $valorTotal, $entrada, $vencimento, $parcelas)
+    private function criarParcelas($valorTotal, $entrada, $vencimento, $parcelas): void
     {
+        $valorParcela = ($valorTotal - $entrada) / $parcelas;
+        $vencimento = Carbon::parse($vencimento);
+        for ($i = 1; $i < $parcelas; $i++) {
+            $parcela = new ReparcelamentoParcela();
+            $parcela->reparcelamento = $this->reparcelamento;
+            $parcela->numero_parcela = $i;
+            $parcela->valor_total = $valorParcela;
+            $parcela->vencimento = $vencimento;
+            $parcela->save();
 
+            $vencimento->addMonth(1);
+        }
     }
 
 }
