@@ -3,10 +3,12 @@
 namespace App\Admin\Actions;
 
 use App\Models\ClienteEmAtraso;
+use App\Models\Reparcelamento;
 use Encore\Admin\Actions\RowAction;
 use Encore\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 
 class ClienteNegociarDividaAction extends RowAction
@@ -15,7 +17,12 @@ class ClienteNegociarDividaAction extends RowAction
 
     public function handle(Model $model, Request $request)
     {
+        $id = $this->row()->getKey();
+        $cliente = $model->find($id);
 
+        DB::transaction(function () use ($cliente){
+            $this->quitarParcelasMaisVendas($cliente);
+        });
         return $this->response()->success('Success message.')->refresh();
     }
 
@@ -46,9 +53,9 @@ class ClienteNegociarDividaAction extends RowAction
         ");
 
         $this->select('cliente', 'Cliente',)
-            ->options(
-                [$id => $cliente->nome . ' - ' . $totalEmdividas]
-            )
+            ->options([
+                $id => $cliente->nome . ' - ' . $totalEmdividas
+            ])
             ->required()
             ->value($id);
 
@@ -70,9 +77,11 @@ class ClienteNegociarDividaAction extends RowAction
             ->attribute(['autocomplete' => 'off'])
             ->required()
             ->value($totalEmdividas);
+
         $this->text('valor_entrada'. $id , 'Entrada')
             ->attribute(['autocomplete' => 'off'])
             ->value('0,00');
+
         $this->text('valor_total'. $id , 'Total')
             ->required()
             ->attribute(['autocomplete' => 'off'])
@@ -80,25 +89,25 @@ class ClienteNegociarDividaAction extends RowAction
     }
 
     /**
-     * Busca e quita todas as parcelas das vendas em atraso do cliente
+     * Busca e quita todas as parcelas e vendas em atraso do cliente
      * @param ClienteEmAtraso $cliente
      */
-    private function quitarParcelasVendas(ClienteEmAtraso $cliente)
+    private function quitarParcelasMaisVendas(ClienteEmAtraso $cliente)
     {
+        $vendas = $cliente->vendas();
+        foreach ($vendas as $venda) {
+            $parcelas = $venda->parcelas();
+            foreach ($parcelas as $parcela){
+                $parcela->status = 1;
+                $parcela->valor_pago = $parcela->valor_extra + $parcela->valor_total;
+                $parcela->save();
+            }
+        }
 
     }
 
     /**
-     * Busca e quita todas as vendas em atraso do cliente
-     * @param ClienteEmAtraso $cliente
-     */
-    private function quitarVendas(ClienteEmAtraso $cliente)
-    {
-
-    }
-
-    /**
-     * Cria o reparcelamento apartir da negociação
+     * Cria o reparcelamento a partir da negociação
      *
      * @param ClienteEmAtraso $cliente
      * @param $valorTotal
@@ -106,7 +115,27 @@ class ClienteNegociarDividaAction extends RowAction
      * @param $vencimento
      * @param $parcelas
      */
-    private function criaReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $vencimento, $parcelas)
+    private function criarReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $parcelas)
+    {
+        $reparcelamento = new Reparcelamento();
+        $reparcelamento->cliente = $cliente;
+        $reparcelamento->entrada = $entrada;
+        $reparcelamento->parcelas = $parcelas;
+        $reparcelamento->valor_total = $valorTotal;
+
+
+    }
+
+    /**
+     * Cria as parcelas do reparcelamento
+     *
+     * @param Reparcelamento $reparcelamento
+     * @param $valorTotal
+     * @param $entrada
+     * @param $vencimento
+     * @param $parcelas
+     */
+    private function criarParcelas(Reparcelamento $reparcelamento, $valorTotal, $entrada, $vencimento, $parcelas)
     {
 
     }
