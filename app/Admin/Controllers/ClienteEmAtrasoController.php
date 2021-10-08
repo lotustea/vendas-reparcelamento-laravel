@@ -12,6 +12,7 @@ use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
 use Encore\Admin\Widgets\Box;
+Use Encore\Admin\Admin;
 use Illuminate\Support\Facades\Request;
 use function GuzzleHttp\Promise\all;
 
@@ -61,11 +62,12 @@ class ClienteEmAtrasoController extends AdminController
         $grid->column('indicacao', __('Indicacao'));
         $grid->column('data_nascimento', __('Data nascimento'));
         new VendasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
-        $totalDevido = ClienteEmAtraso::totalDevido($this->getKey());
-        $grid->column('total_devido', 'Total Devido')
-            ->display(function () use ($totalDevido) {
-                return 'R$' . $totalDevido;
-            });
+        $grid->column('dividas', 'Total em dívidas')->display(
+            function () {
+                return $this->totalEmDividas(true);
+            }
+        )->label('danger');
+
 
         return $grid;
     }

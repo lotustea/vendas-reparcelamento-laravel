@@ -30,6 +30,8 @@ Route::group([
 
     $router->resource('reparcelamentos', ReparcelamentoController::class);
 
+    $router->get('reparcelamentos/novo/{id}', 'ReparcelamentoController@criar');
+
     $router->resource('reparcelamento-parcelas', ReparcelamentoParcelaController::class);
 
 });

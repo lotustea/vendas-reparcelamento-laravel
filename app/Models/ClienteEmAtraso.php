@@ -14,8 +14,16 @@ class ClienteEmAtraso extends Model
 
     public function vendas()
     {
-        return $this->hasMany(Venda::class, 'id_cliente')->with('parcelas')
+        return $this->hasMany(Venda::class, 'id_cliente')->with('parcelasEmAberto')
             ->where('vendas.status', '!=', '1');
+
+    }
+
+    public function totalEmDividas($formatacao = false){
+        $id = $this->id;
+        $total = self::totalEmParcelas($id) - self::totalPago($id);
+
+        return $formatacao ? 'R$' . Methods::toReal($total) : $total;
     }
 
     /**
@@ -35,6 +43,27 @@ class ClienteEmAtraso extends Model
     }
 
     /**
+     * Calcula e retorna o total em parcelas do cliente
+     * Primeiro parametro é o id do cliente, segundo parametro bool
+     * retorno formatado para real brasileiro (default false)
+     *
+     * @param int $id
+     * @param bool $formatacao
+     * @return string
+     */
+    public static function totalEmParcelas($id, $formatacao = false)
+    {
+        $vendas = self::find($id)->vendas;
+        $total = 0;
+
+        foreach ($vendas as $venda) {
+            $total += $venda->parcelasEmAberto()->sum('valor_parcela') + $venda->parcelasEmAberto()->sum('valor_extra');
+        }
+
+        return $formatacao ? 'R$' . Methods::toReal($total) : $total;
+    }
+
+    /**
      * Calcula e retorna o valor total pago pelo cliente
      * Primeiro parametro é o id do cliente, segundo parametro bool
      * retorno formatado para real brasileiro (default false)
@@ -49,7 +78,7 @@ class ClienteEmAtraso extends Model
         $total = 0;
 
         foreach ($vendas as $venda) {
-           $total += $venda->parcelas()->sum('valor_pago');
+           $total += $venda->parcelasEmAberto()->sum('valor_pago');
         }
 
         return $formatacao ? 'R$' . Methods::toReal($total) : $total;
@@ -66,7 +95,7 @@ class ClienteEmAtraso extends Model
      */
     public static function totalDevido($id, $formatacao = false)
     {
-        $total = self::totalEmCompras($id) - self::totalPago($id);
+        $total = self::totalEmParcelas($id) - self::totalPago($id);
 
         return $formatacao ? 'R$' . Methods::toReal($total) : $total;
     }

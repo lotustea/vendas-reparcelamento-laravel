@@ -28,4 +28,10 @@ class Venda extends Model
     {
         return $this->hasMany(VendaParcela::class, 'id_venda');
     }
+
+    public function parcelasEmAberto()
+    {
+        return $this->hasMany(VendaParcela::class, 'id_venda')
+                ->where('venda_parcelas.status', '!=', '1');
+    }
 }

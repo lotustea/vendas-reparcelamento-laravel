@@ -29,7 +29,7 @@ class VendasTable
                         ->map(function ($venda) {
                             $venda['acao'] = "
                                 <a
-                                    href=''
+                                    href='http://fabiwj.web282.uni5.net/editar-venda-{$venda['id']}'
                                     class='btn btn-sm btn-info'
                                     title='Novo'
                                 >

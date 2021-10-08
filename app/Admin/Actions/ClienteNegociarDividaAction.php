@@ -2,29 +2,113 @@
 
 namespace App\Admin\Actions;
 
+use App\Models\ClienteEmAtraso;
 use Encore\Admin\Actions\RowAction;
+use Encore\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 
 class ClienteNegociarDividaAction extends RowAction
 {
     public $name = 'Renegociar Dívidas';
 
-    public function handle(Model $model)
+    public function handle(Model $model, Request $request)
     {
-        // $model ...
 
         return $this->response()->success('Success message.')->refresh();
     }
 
-    public function form()
+    public function form(Model $model)
     {
-        $this->checkbox('type', 'type')->options([]);
-        $this->textarea('reason', 'reason')->rules('required');
+        $id = $this->row()->getKey();
+        $cliente = $model->find($id);
+        $totalEmdividas = $cliente->totalEmDividas(true);
+
+        Admin::script(
+                "$('#valor_negociado{$id}').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true});
+            $('#valor_entrada{$id}').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true
+            });
+            $('#valor_total{$id}').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true
+            });
+        ");
+
+        $this->select('cliente', 'Cliente',)
+            ->options(
+                [$id => $cliente->nome . ' - ' . $totalEmdividas]
+            )
+            ->required()
+            ->value($id);
+
+        $this->date('primeiro_vencimento' . $id, 'Vencimento da primeira parcela')
+            ->required()
+            ->attribute(['autocomplete' => 'off']);
+
+        $this->select('parcelas' . $id, 'Selecione a quantidade de parcelas')
+            ->options([
+                1 => '1x', 2 => '2x', 3 => '3x', 4 => '4x', 5 => '5x', 6 => '6x',
+                7 => '7x', 8 => '8x', 9 => '9x', 10 => '10x', 11 => '11x', 12 => '12x',
+                13 => '13x', 14 => '14x', 15 => '15x', 16 => '16x', 17 => '17x', 18 => '18x',
+                19 => '19x', 20 => '20x', 21 => '21x', 22 => '22x', 23 => '23x', 24 => '24x',
+            ])
+            ->required()
+            ->attribute(['autocomplete' => 'off']);
+
+        $this->text('valor_negociado'. $id ,'Valor Negociação')
+            ->attribute(['autocomplete' => 'off'])
+            ->required()
+            ->value($totalEmdividas);
+        $this->text('valor_entrada'. $id , 'Entrada')
+            ->attribute(['autocomplete' => 'off'])
+            ->value('0,00');
+        $this->text('valor_total'. $id , 'Total')
+            ->required()
+            ->attribute(['autocomplete' => 'off'])
+            ->value($totalEmdividas);
     }
 
-    public function html()
+    /**
+     * Busca e quita todas as parcelas das vendas em atraso do cliente
+     * @param ClienteEmAtraso $cliente
+     */
+    private function quitarParcelasVendas(ClienteEmAtraso $cliente)
     {
-        return "<a class='report-posts btn btn-sm btn-danger'><i class='fa fa-info-circle'></i>Report</a>";
+
     }
+
+    /**
+     * Busca e quita todas as vendas em atraso do cliente
+     * @param ClienteEmAtraso $cliente
+     */
+    private function quitarVendas(ClienteEmAtraso $cliente)
+    {
+
+    }
+
+    /**
+     * Cria o reparcelamento apartir da negociação
+     *
+     * @param ClienteEmAtraso $cliente
+     * @param $valorTotal
+     * @param $entrada
+     * @param $vencimento
+     * @param $parcelas
+     */
+    private function criaReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $vencimento, $parcelas)
+    {
+
+    }
+
 }
