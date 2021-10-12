@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Tables\VendasAbatidasTable;
 use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
 use Encore\Admin\Controllers\AdminController;
@@ -94,6 +95,7 @@ class ReparcelamentoController extends AdminController
         $form->number('parcelas', 'Selecione a quantidade de parcelas');
         $form->decimal('entrada', __('Entrada'));
         $form->switch('status', __('Status'));
+        new VendasAbatidasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
         $form->text('vendas_abatidas', __('Vendas abatidas'));
 
         return $form;

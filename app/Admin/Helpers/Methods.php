@@ -12,9 +12,7 @@ class Methods
 
     public static function toFloat($price)
     {
-        $price = str_replace('R$ ', '', $price);
-        $price = str_replace('.', '', $price);
-        $price = str_replace(',', '.', $price);
+        $price = str_replace(array('R$', '.', ','), array('', '', '.'), $price);
         return $price;
     }
 
