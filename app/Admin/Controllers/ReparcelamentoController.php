@@ -69,13 +69,13 @@ class ReparcelamentoController extends AdminController
         $show->cliente_id()->as(function ($cliente){
             return Cliente::find($cliente)->nome;
         });
-        $show->field('valor_total', __('Valor total'));
+        $show->valor_total()->as(function ($valor){
+            return 'R$ ' . Methods::toReal($valor);
+        });
         $show->field('parcelas', __('Parcelas'));
         $show->field('entrada', __('Entrada'));
         $show->status()->using([0 => 'Em aberto', 1 => 'Pago']);
-        //$show->field('vendas_abatidas', __('Vendas abatidas'));
         $show->field('created_at', __('Criado em'));
-        //$show->field('updated_at', __('Updated at'));
         $show->parcelas('Parcelas', function ($parcelas){
             $parcelas->resource('/admin/reparcelamento-parcelas');
             $parcelas->disableExport();
@@ -84,10 +84,20 @@ class ReparcelamentoController extends AdminController
             $parcelas->disableRowSelector();
             $parcelas->disableCreateButton();
 
-            $parcelas->valor_total();
+            $parcelas->valor_total()->display(function ($valorTotal) {
+                return 'R$ ' . Methods::toReal($valorTotal);
+            });
+
             $parcelas->numero_parcela();
-            $parcelas->vencimento();
-            $parcelas->valor_pago();
+
+            $parcelas->vencimento()->display(function ($vencimento) {
+                return Carbon::parse($vencimento)->format('d/m/Y - ') . Carbon::parse($vencimento)->diffForHumans();
+            });
+
+            $parcelas->valor_pago()->display(function ($valorPago) {
+                return 'R$ ' . Methods::toReal($valorPago);
+            });
+
             $parcelas->status();
 
         });

@@ -2,6 +2,7 @@
 namespace App\Admin\Tables;
 
 use App\Admin\Helpers\Methods;
+use Carbon\Carbon;
 use Encore\Admin\Widgets\Table;
 
 class ReparcelamentoParcelasTable
@@ -20,8 +21,6 @@ class ReparcelamentoParcelasTable
         $coluna->expand(
             function ($modelo) {
                 $parcelas = $modelo->parcelas()->take(10)->get()->map(function ($parcela) {
-                    $parcela['valor_total'] = 'R$ ' . Methods::toReal($parcela['valor_total']);
-                    $parcela['valor_pago'] = 'R$ ' . Methods::toReal($parcela['valor_total']);
                     return
                         $parcela
                             ->only([
