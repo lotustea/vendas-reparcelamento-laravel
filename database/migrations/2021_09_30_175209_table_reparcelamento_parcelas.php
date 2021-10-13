@@ -19,7 +19,8 @@ class TableReparcelamentoParcelas extends Migration
             $table->float('valor_total');
             $table->integer('numero_parcela');
             $table->date('vencimento');
-            $table->boolean('status');
+            $table->date('data_pagamento')->nullable();
+            $table->boolean('status')->default(0);
             $table->timestamps();
         });
     }

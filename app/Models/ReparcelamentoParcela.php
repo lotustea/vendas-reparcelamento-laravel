@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class ReparcelamentoParcela extends Model
 {
     use HasFactory;
+
+    public function reparcelamento()
+    {
+        return $this->belongsTo(Reparcelamento::class);
+    }
 }

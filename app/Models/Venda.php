@@ -14,7 +14,7 @@ class Venda extends Model
         return $this->belongsTo(ClienteEmAtraso::class);
     }
 
-    public function clientes()
+    public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }

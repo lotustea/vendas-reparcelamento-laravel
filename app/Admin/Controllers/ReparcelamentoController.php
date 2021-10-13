@@ -2,9 +2,12 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasAbatidasTable;
+use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
+use Carbon\Carbon;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -19,7 +22,7 @@ class ReparcelamentoController extends AdminController
      *
      * @var string
      */
-    protected $title = 'Reparcelamento';
+    protected $title = 'Renegociações';
 
     /**
      * Make a grid builder.
@@ -31,14 +34,23 @@ class ReparcelamentoController extends AdminController
         $grid = new Grid(new Reparcelamento());
 
         $grid->column('id', __('Id'));
-        $grid->column('cliente_id', __('Cliente id'));
-        $grid->column('valor_total', __('Valor total'));
-        $grid->column('parcelas', __('Parcelas'));
-        $grid->column('entrada', __('Entrada'));
-        $grid->column('status', __('Status'));
-        $grid->column('vendas_abatidas', __('Vendas abatidas'));
-        $grid->column('created_at', __('Created at'));
-        $grid->column('updated_at', __('Updated at'));
+        $grid->column('cliente_id','Cliente')->display(function ($cliente) {
+            return Cliente::find($cliente)->nome;
+        });
+        $grid->column('created_at', __('Criado em'))->display(function () {
+            return  Carbon::parse($this->created_at)->format('d/m/Y  H:i:s - ') . $this->created_at->diffForHumans();
+        });
+        $grid->column('valor_total', __('Valor total'))->display(function ($valor) {
+            return 'R$ ' . Methods::toReal($valor);
+        });
+        $grid->column('entrada', __('Entrada'))->display(function ($entrada) {
+            return 'R$ ' . Methods::toReal($entrada);
+        });;
+        $grid->column('status', __('Status'))
+            ->using([0 => 'Em aberto', 1 => 'Pago']);
+
+        new VendasAbatidasTable($grid->column('', 'Vendas abatidas'));
+
 
         return $grid;
     }
@@ -54,14 +66,31 @@ class ReparcelamentoController extends AdminController
         $show = new Show(Reparcelamento::findOrFail($id));
 
         $show->field('id', __('Id'));
-        $show->field('cliente_id', __('Cliente id'));
+        $show->cliente_id()->as(function ($cliente){
+            return Cliente::find($cliente)->nome;
+        });
         $show->field('valor_total', __('Valor total'));
         $show->field('parcelas', __('Parcelas'));
         $show->field('entrada', __('Entrada'));
-        $show->field('status', __('Status'));
-        $show->field('vendas_abatidas', __('Vendas abatidas'));
-        $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
+        $show->status()->using([0 => 'Em aberto', 1 => 'Pago']);
+        //$show->field('vendas_abatidas', __('Vendas abatidas'));
+        $show->field('created_at', __('Criado em'));
+        //$show->field('updated_at', __('Updated at'));
+        $show->parcelas('Parcelas', function ($parcelas){
+            $parcelas->resource('/admin/reparcelamento-parcelas');
+            $parcelas->disableExport();
+            $parcelas->disablePagination();
+            $parcelas->disableFilter();
+            $parcelas->disableRowSelector();
+            $parcelas->disableCreateButton();
+
+            $parcelas->valor_total();
+            $parcelas->numero_parcela();
+            $parcelas->vencimento();
+            $parcelas->valor_pago();
+            $parcelas->status();
+
+        });
 
         return $show;
     }
@@ -95,7 +124,6 @@ class ReparcelamentoController extends AdminController
         $form->number('parcelas', 'Selecione a quantidade de parcelas');
         $form->decimal('entrada', __('Entrada'));
         $form->switch('status', __('Status'));
-        new VendasAbatidasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
         $form->text('vendas_abatidas', __('Vendas abatidas'));
 
         return $form;
