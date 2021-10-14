@@ -2,6 +2,8 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\ClienteNegociarDividaAction;
+use App\Admin\Actions\ReparcelamentoParcelaPagarAction;
 use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasAbatidasTable;
 use App\Models\Cliente;
@@ -66,16 +68,21 @@ class ReparcelamentoController extends AdminController
         $show = new Show(Reparcelamento::findOrFail($id));
 
         $show->field('id', __('Id'));
-        $show->cliente_id()->as(function ($cliente){
+        $show->cliente_id('Cliente')->as(function ($cliente){
             return Cliente::find($cliente)->nome;
         });
         $show->valor_total()->as(function ($valor){
             return 'R$ ' . Methods::toReal($valor);
         });
+        $show->entrada()->as(function ($entrada){
+            return 'R$ ' . Methods::toReal($entrada);
+        });
         $show->field('parcelas', __('Parcelas'));
-        $show->field('entrada', __('Entrada'));
         $show->status()->using([0 => 'Em aberto', 1 => 'Pago']);
-        $show->field('created_at', __('Criado em'));
+        $show->created_at('Criado em')->as(function ($data){
+            return Carbon::parse($data)->format('d/m/Y - ') . Carbon::parse($data)->diffForHumans();
+        });
+
         $show->parcelas('Parcelas', function ($parcelas){
             $parcelas->resource('/admin/reparcelamento-parcelas');
             $parcelas->disableExport();
@@ -98,7 +105,11 @@ class ReparcelamentoController extends AdminController
                 return 'R$ ' . Methods::toReal($valorPago);
             });
 
-            $parcelas->status();
+            $parcelas->status()->using([0 => 'Em aberto', 1 => 'Pago']);
+
+            $parcelas->pagar()->action(ReparcelamentoParcelaPagarAction::class);
+
+
 
         });
 

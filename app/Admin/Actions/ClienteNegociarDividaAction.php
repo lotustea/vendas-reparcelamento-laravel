@@ -35,10 +35,10 @@ class ClienteNegociarDividaAction extends RowAction
         try {
                 $this->reparcelamento = $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
                 $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
-                dd($this->quitarParcelasMaisVendas($cliente));
+                $this->quitarParcelasMaisVendas($cliente);
 
             DB::commit();
-            return $this->response()->success('Success message.' )->refresh();
+            return $this->response()->success('Renegociação criada com sucesso!' )->refresh();
         } catch (Throwable $e) {
             DB::rollback();
             return $this->response()->error($e);
@@ -116,7 +116,6 @@ class ClienteNegociarDividaAction extends RowAction
         $vendas = $cliente->vendas();
         foreach ($vendas as $venda) {
             $venda = Venda::find($venda->id);
-            dd($venda);
             $parcelas = $venda->parcelas();
             $venda->status = 1;
             $venda->save();
@@ -162,9 +161,14 @@ class ClienteNegociarDividaAction extends RowAction
      */
     private function criarParcelas($valorTotal, $entrada, $vencimento, $parcelas): void
     {
-        $valorParcela = ($valorTotal - $entrada) / $parcelas;
+        $valorTotal -= $entrada;
+        $valorDivisao = $valorTotal / $parcelas;
+        $valorMultiplicacao = $parcelas * $valorDivisao;
+        $restante = $valorTotal - $valorMultiplicacao;
+        $valorParcela = ($valorTotal + $restante) / $parcelas;
+
         $vencimento = Carbon::parse($vencimento);
-        for ($i = 1; $i < $parcelas; $i++) {
+        for ($i = 0; $i < $parcelas; $i++) {
             $parcela = new ReparcelamentoParcela();
             $parcela->reparcelamento_id = $this->reparcelamento->id;
             $parcela->numero_parcela = $i;
