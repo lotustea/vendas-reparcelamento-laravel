@@ -35,6 +35,15 @@ class ReparcelamentoController extends AdminController
     {
         $grid = new Grid(new Reparcelamento());
 
+        $grid->filter(function($filter){
+            $filter->disableIdFilter();
+            $filter->where(function ($query) {
+                $query->whereHas('cliente', function ($query) {
+                    $query->where('nome', 'like', "%{$this->input}%");
+                });
+            }, 'Cliente');
+        });
+
         $grid->column('id', __('Id'));
         $grid->column('cliente_id','Cliente')->display(function ($cliente) {
             return Cliente::find($cliente)->nome;

@@ -43,6 +43,12 @@ class ClienteEmAtrasoController extends AdminController
     {
         $grid = new Grid(new ClienteEmAtraso());
 
+        $grid->filter(function($filter){
+            $filter->disableIdFilter();
+            $filter->like('nome', 'Nome');
+
+        });
+
         $grid->header(function () {
 
             $view = view('admin.table.partials.total-a-receber');
