@@ -2,37 +2,21 @@
 
 namespace App\Admin\Controllers;
 
-use App\Admin\Actions\ClienteNegociarDividaAction;
-use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasTable;
 use App\Models\Cliente;
-use App\Models\ClienteEmAtraso;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
-use Encore\Admin\Widgets\Box;
-Use Encore\Admin\Admin;
-use Illuminate\Support\Facades\Request;
-use function GuzzleHttp\Promise\all;
 
-class ClienteEmAtrasoController extends AdminController
+class ClienteController extends AdminController
 {
     /**
      * Title for current resource.
      *
      * @var string
      */
-    protected $title = 'Cliente em atraso';
-
-    private $methods;
-
-    private ClienteEmAtraso $modelo;
-
-    public function __construct()
-    {
-        $this->methods = new Methods();
-    }
+    protected $title = 'Cliente';
 
     /**
      * Make a grid builder.
@@ -41,23 +25,14 @@ class ClienteEmAtrasoController extends AdminController
      */
     protected function grid()
     {
-        $grid = new Grid(new ClienteEmAtraso());
-        $grid->disableActions();
-        $grid->disableCreateButton();
+        $grid = new Grid(new Cliente());
 
         $grid->filter(function($filter){
             $filter->disableIdFilter();
             $filter->like('nome', 'Nome');
             //$filter->
         });
-
-        /*$grid->header(function () {
-
-            $view = view('admin.table.partials.total-a-receber');
-
-            return new Box('Total a Receber', $view);
-        });*/
-
+        $grid->column('id', __('Id'));
         $grid->column('nome', __('Nome'));
         $grid->column('cpf', __('Cpf'));
         $grid->column('email', __('Email'));
@@ -65,7 +40,6 @@ class ClienteEmAtrasoController extends AdminController
         $grid->column('estado', __('Estado'));
         $grid->column('cidade', __('Cidade'));
         $grid->column('indicacao', __('Indicacao'));
-        new VendasTable($grid->column('vendas_cliente', 'Vendas em aberto'));
         $grid->column('dividas', 'Total em dívidas')->display(
             function () {
                 $id = $this->getKey();
@@ -100,47 +74,29 @@ class ClienteEmAtrasoController extends AdminController
     {
         $show = new Show(Cliente::findOrFail($id));
 
-        $show->field('nome', __('Nome'))
-            ->setWidth(5, 5);
-
-        $show->field('cpf', __('Cpf'))
-            ->setWidth(5, 5);
-
-        $show->field('email', __('Email'))
-            ->setWidth(5, 5);
-
-        $show->field('telefone', __('Telefone'))
-            ->setWidth(5, 5);
-
-        $show->field('telefone2', __('Telefone2'))
-            ->setWidth(5, 5);
-
-        $show->field('cep', __('Cep'))
-            ->setWidth(5, 5);
-
-        $show->field('estado', __('Estado'))
-            ->setWidth(5, 5);
-
-        $show->field('cidade', __('Cidade'))
-            ->setWidth(5, 5);
-
-        $show->field('bairro', __('Bairro'))
-            ->setWidth(5, 5);
-
-        $show->field('rua', __('Rua'))
-            ->setWidth(5, 5);
-
-        $show->field('numero', __('Numero'))
-            ->setWidth(5, 5);
-
-        $show->field('complemento_comercial', __('Complemento comercial'))
-            ->setWidth(5, 5);
-
-        $show->field('indicacao', __('Indicacao'))
-            ->setWidth(5, 5);
-
-        $show->field('data_nascimento', __('Data nascimento'))
-            ->setWidth(5, 5);
+        $show->field('id', __('Id'));
+        $show->field('nome', __('Nome'));
+        $show->field('cpf', __('Cpf'));
+        $show->field('email', __('Email'));
+        $show->field('telefone', __('Telefone'));
+        $show->field('telefone2', __('Telefone2'));
+        $show->field('cep', __('Cep'));
+        $show->field('estado', __('Estado'));
+        $show->field('cidade', __('Cidade'));
+        $show->field('bairro', __('Bairro'));
+        $show->field('rua', __('Rua'));
+        $show->field('numero', __('Numero'));
+        $show->field('complemento', __('Complemento'));
+        $show->field('cep_comercial', __('Cep comercial'));
+        $show->field('estado_comercial', __('Estado comercial'));
+        $show->field('cidade_comercial', __('Cidade comercial'));
+        $show->field('bairro_comercial', __('Bairro comercial'));
+        $show->field('rua_comercial', __('Rua comercial'));
+        $show->field('numero_comercial', __('Numero comercial'));
+        $show->field('complemento_comercial', __('Complemento comercial'));
+        $show->field('indicacao', __('Indicacao'));
+        $show->field('data_nascimento', __('Data nascimento'));
+        $show->field('senha', __('Senha'));
 
         return $show;
     }
@@ -178,10 +134,5 @@ class ClienteEmAtrasoController extends AdminController
         $form->text('senha', __('Senha'));
 
         return $form;
-    }
-
-    public function totalDividendos()
-    {
-        return ClienteEmAtraso::totalDividendos();
     }
 }

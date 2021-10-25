@@ -1,5 +1,8 @@
 <?php
 
+
+use App\Admin\Forms\ReparcelarForm;
+use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
 use Illuminate\Routing\Router;
 
@@ -15,8 +18,9 @@ Route::group([
     $router->get('/', 'HomeController@index')->name('home');
 
     $router->get('total-dividendos', function () {
-        return ClienteEmAtraso::totalDividendos(true);
+        return Cliente::totalDividendos(true);
     });
+    $router->resource('clientes', ClienteController::class);
 
     $router->resource('clientes-em-atraso', ClienteEmAtrasoController::class);
 
@@ -30,8 +34,10 @@ Route::group([
 
     $router->resource('reparcelamentos', ReparcelamentoController::class);
 
-    $router->get('reparcelamentos/novo/{id}', 'ReparcelamentoController@criar');
-
+    $router->get('reparcelamentos/novo/{id}', function ($id) {
+        return (new App\Admin\Controllers\ReparcelamentoController)->reparcelar($id);
+    });
+    $router->post('reparcelamentos/criarNegociacao', [ReparcelarForm::class, 'handle']);
     $router->resource('reparcelamento-parcelas', ReparcelamentoParcelaController::class);
 
 });

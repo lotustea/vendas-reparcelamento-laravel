@@ -3,6 +3,7 @@
 namespace App\Admin\Actions;
 
 use App\Admin\Helpers\Methods;
+use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
 use App\Models\ReparcelamentoParcela;
@@ -25,7 +26,7 @@ class ClienteNegociarDividaAction extends RowAction
     public function handle(Model $model, Request $request): \Encore\Admin\Actions\Response
     {
         $id = $this->row()->getKey();
-        $cliente = $model->find($id);
+        $cliente = Cliente::find($id);
         $valorTotal = Methods::toFloat($request->input('valor_total' . $id));
         $entrada = Methods::toFloat($request->input('valor_entrada' . $id));
         $parcelas = $request->input('parcelas' . $id);
@@ -48,7 +49,7 @@ class ClienteNegociarDividaAction extends RowAction
     public function form(Model $model): void
     {
         $id = $this->row()->getKey();
-        $cliente = $model->find($id);
+        $cliente = Cliente::find($id);
         $totalEmdividas = $cliente->totalEmDividas(true);
 
         Admin::script(
@@ -109,9 +110,9 @@ class ClienteNegociarDividaAction extends RowAction
 
     /**
      * Busca e quita todas as parcelas e vendas em atraso do cliente
-     * @param ClienteEmAtraso $cliente
+     * @param Cliente $cliente
      */
-    private function quitarParcelasMaisVendas(ClienteEmAtraso $cliente): void
+    private function quitarParcelasMaisVendas(Cliente $cliente): void
     {
         $vendas = $cliente->vendas();
         foreach ($vendas as $venda) {
@@ -131,13 +132,13 @@ class ClienteNegociarDividaAction extends RowAction
     /**
      * Cria o reparcelamento a partir da negociação
      *
-     * @param ClienteEmAtraso $cliente
+     * @param Cliente $cliente
      * @param $valorTotal
      * @param $entrada
      * @param $parcelas
      * @return Reparcelamento
      */
-    private function criarReparcelamento(ClienteEmAtraso $cliente, $valorTotal, $entrada, $parcelas): Reparcelamento
+    private function criarReparcelamento(Cliente $cliente, $valorTotal, $entrada, $parcelas): Reparcelamento
     {
         $novoReparcelamento = new Reparcelamento();
         $novoReparcelamento->cliente_id = $cliente->id;

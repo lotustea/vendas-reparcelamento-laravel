@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Admin\Actions\ClienteNegociarDividaAction;
 use App\Admin\Actions\ReparcelamentoParcelaPagarAction;
+use App\Admin\Forms\ReparcelarForm;
 use App\Admin\Helpers\Methods;
 use App\Admin\Tables\VendasAbatidasTable;
 use App\Models\Cliente;
@@ -34,6 +35,10 @@ class ReparcelamentoController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new Reparcelamento());
+        $grid->disableActions();
+        $grid->disableColumnSelector();
+        $grid->disableBatchActions();
+        $grid->disableCreateButton();
 
         $grid->filter(function($filter){
             $filter->disableIdFilter();
@@ -45,6 +50,20 @@ class ReparcelamentoController extends AdminController
         });
 
         $grid->column('id', __('Id'));
+
+        $grid->column('ver', 'Ver')->display(
+            function () {
+                $id = $this->getKey();
+                return  "
+                                <a
+                                    href='reparcelamentos/{$id}'
+                                    class='btn btn-sm btn-default'
+                                    title='Ver'
+                                >
+                                <i class='fa fa-eye'></i>
+                                </a>";
+            }
+        );
         $grid->column('cliente_id','Cliente')->display(function ($cliente) {
             return Cliente::find($cliente)->nome;
         });
@@ -75,6 +94,12 @@ class ReparcelamentoController extends AdminController
     protected function detail($id)
     {
         $show = new Show(Reparcelamento::findOrFail($id));
+        $show->panel()
+            ->tools(function ($tools) {
+                $tools->disableEdit();
+                $tools->disableList();
+                $tools->disableDelete();
+            });
 
         $show->field('id', __('Id'));
         $show->cliente_id('Cliente')->as(function ($cliente){
@@ -92,13 +117,16 @@ class ReparcelamentoController extends AdminController
             return Carbon::parse($data)->format('d/m/Y - ') . Carbon::parse($data)->diffForHumans();
         });
 
-        $show->parcelas('Parcelas', function ($parcelas){
+        $hoje = Carbon::now();
+        $show->parcelas('Parcelas', function ($parcelas) use ($hoje){
             $parcelas->resource('/admin/reparcelamento-parcelas');
             $parcelas->disableExport();
             $parcelas->disablePagination();
             $parcelas->disableFilter();
             $parcelas->disableRowSelector();
             $parcelas->disableCreateButton();
+            $parcelas->disableActions();
+            $parcelas->disableColumnSelector();
 
             $parcelas->valor_total()->display(function ($valorTotal) {
                 return 'R$ ' . Methods::toReal($valorTotal);
@@ -106,8 +134,12 @@ class ReparcelamentoController extends AdminController
 
             $parcelas->numero_parcela();
 
-            $parcelas->vencimento()->display(function ($vencimento) {
+            $parcelas->vencimento()->display(function ($vencimento) use ($hoje){
+                if(Carbon::parse($vencimento) <= $hoje){
+                    return Carbon::parse($vencimento)->format('d/m/Y - ') . Carbon::parse($vencimento)->diffForHumans() . " - vencido.";
+                }
                 return Carbon::parse($vencimento)->format('d/m/Y - ') . Carbon::parse($vencimento)->diffForHumans();
+
             });
 
             $parcelas->valor_pago()->display(function ($valorPago) {
@@ -116,9 +148,13 @@ class ReparcelamentoController extends AdminController
 
             $parcelas->status()->using([0 => 'Em aberto', 1 => 'Pago']);
 
-            $parcelas->pagar()->action(ReparcelamentoParcelaPagarAction::class);
-
-
+            $parcelas->pagar()->display(function ($title, $column) {
+                If ($this->status == 1) {
+                    return 'Pago';
+                }
+                // Otherwise it is displayed as editable
+                return $column->action(ReparcelamentoParcelaPagarAction::class);
+            });
 
         });
 
@@ -141,6 +177,21 @@ class ReparcelamentoController extends AdminController
             ->description($this->description['create'] ?? trans('admin.create'))
             ->body($this->form($id));
     }
+
+    public function reparcelar($id)
+    {
+        $cliente = Cliente::find($id);
+        $totalEmdividas = $cliente->totalEmDividas($cliente, true);
+        $content =  (new Content())
+            ->title('Reparcelamento de dívidas')
+            ->body(new ReparcelarForm(
+                ['id' => $id, 'valor_negociado' => $totalEmdividas, 'valor_total'  => $totalEmdividas]
+            ));
+        if ($result = session('success')) {
+            $content->row('<pre>'.json_encode($result).'</pre>');
+        }
+    }
+
     /**
      * Make a form builder.
      *

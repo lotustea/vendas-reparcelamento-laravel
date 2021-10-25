@@ -1,6 +1,7 @@
 <?php
 namespace App\Admin\Tables;
 
+use App\Models\Cliente;
 use App\Models\Venda;
 use App\Models\VendaParcela;
 use Encore\Admin\Widgets\Table;
@@ -22,6 +23,7 @@ class VendasTable
     {
         $coluna->expand(
             function ($model) {
+                $model = Cliente::find($model->id);
                 $vendas =
                     $model
                         ->vendas()
@@ -31,7 +33,7 @@ class VendasTable
                                 <a
                                     href='http://fabiwj.web282.uni5.net/editar-venda-{$venda['id']}'
                                     class='btn btn-sm btn-info'
-                                    title='Novo'
+                                    title='Ver'
                                 >
                                 <i class='fa fa-eye'></i>
                                 </a>";
@@ -53,7 +55,6 @@ class VendasTable
                                 return
                                     $venda
                                         ->only([
-                                            'acao',
                                             'data_compra',
                                             'valor_compra',
                                             'valor_extra',
@@ -62,12 +63,12 @@ class VendasTable
                                             'valor_pago',
                                             'valor_faltante',
                                             'parcelas',
-                                            'parcelas_pagas'
+                                            'parcelas_pagas',
+                                            'acao'
                                         ]);
                             });
 
                 $tabela = new Table([
-                    'Visualizar',
                     'Data da Compra',
                     'Valor da Compra',
                     'Valor Extra',
@@ -76,7 +77,8 @@ class VendasTable
                     'Valor Pago',
                     'Valor Faltante',
                     'Parcelas',
-                    'Parcelas Pagas'
+                    'Parcelas Pagas',
+                    'Visualizar'
                 ],
                     $vendas->toArray()
                 );
