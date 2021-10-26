@@ -11,6 +11,7 @@ use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
 use Carbon\Carbon;
+use Encore\Admin\Admin;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -169,9 +170,8 @@ class ReparcelamentoController extends AdminController
      *
      * @return Content
      */
-    public function criar(Request $request, $id, Content $content)
+    public function criar($id, Content $content)
     {
-
         return $content
             ->title($this->title())
             ->description($this->description['create'] ?? trans('admin.create'))
@@ -197,15 +197,69 @@ class ReparcelamentoController extends AdminController
      *
      * @return Form
      */
-    protected function form($cliente = null)
+    protected function form($cliente)
     {
         $form = new Form(new Reparcelamento());
-        $form->hidden('cliente_id', 'Cliente')->value($cliente);
-        $form->decimal('valor_total', __('Valor total'));
-        $form->number('parcelas', 'Selecione a quantidade de parcelas');
-        $form->decimal('entrada', __('Entrada'));
-        $form->switch('status', __('Status'));
-        $form->text('vendas_abatidas', __('Vendas abatidas'));
+
+        $cliente = Cliente::find($cliente);
+        $totalEmdividas = 35;
+
+        Admin::script(
+            "$('#valor_negociado').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true});
+            $('#valor_entrada').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true
+            });
+            $('#valor_total').maskMoney({
+                  prefix:'R$ ',
+                  allowNegative: true,
+                  thousands:'.', decimal:',',
+                  affixesStay: true
+            });
+        ");
+
+        $form->radio('cliente', 'Cliente',)
+            ->options([
+                $cliente->id => $cliente->nome . ' - Valor total devido: ' . $totalEmdividas
+            ])
+            ->default($cliente->id)
+            ->rules('required')->disable();
+
+        $form->datetime('primeiro_vencimento', 'Vencimento da primeira parcela')
+            ->placeholder('Selecione a data')
+            ->format('DD-MM-YY')
+            ->rules('required');
+
+        $form->select('parcelas', 'Quantidade de parcelas')
+            ->options([
+                1 => '1x', 2 => '2x', 3 => '3x', 4 => '4x', 5 => '5x', 6 => '6x',
+                7 => '7x', 8 => '8x', 9 => '9x', 10 => '10x', 11 => '11x', 12 => '12x',
+                13 => '13x', 14 => '14x', 15 => '15x', 16 => '16x', 17 => '17x', 18 => '18x',
+                19 => '19x', 20 => '20x', 21 => '21x', 22 => '22x', 23 => '23x', 24 => '24x',
+            ])
+            ->placeholder('Selecione a quantidade de parcelas')
+            ->rules('required')
+            ->attribute(['autocomplete' => 'off']);
+
+        $form->text('valor_negociado','Valor Negociação')
+            ->placeholder('Digite o valor negociado com o cliente')
+            ->attribute(['autocomplete' => 'off'])
+            ->rules('required');
+
+        $form->text('valor_entrada', 'Entrada')
+            ->placeholder('Digite o valor de entrada, se houver')
+            ->attribute(['autocomplete' => 'off']);
+
+        $form->text('valor_total', 'Total')
+            ->placeholder('Valor total da negociação')
+            ->rules('required')
+            ->attribute(['autocomplete' => 'off']);
 
         return $form;
     }

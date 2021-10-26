@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Admin\Controllers\ReparcelamentoController;
 use App\Admin\Forms\ReparcelarForm;
 use App\Models\Cliente;
 use App\Models\ClienteEmAtraso;
@@ -34,10 +35,12 @@ Route::group([
 
     $router->resource('reparcelamentos', ReparcelamentoController::class);
 
-    $router->get('reparcelamentos/novo/{id}', function ($id) {
-        return (new App\Admin\Controllers\ReparcelamentoController)->reparcelar($id);
+    $router->get('/reparcelamentos/criar/cliente/{id}', function ($id, \Encore\Admin\Layout\Content $content) {
+        return (new ReparcelamentoController())->criar($id, $content);
     });
+
     $router->post('reparcelamentos/criarNegociacao', [ReparcelarForm::class, 'handle']);
+
     $router->resource('reparcelamento-parcelas', ReparcelamentoParcelaController::class);
 
 });

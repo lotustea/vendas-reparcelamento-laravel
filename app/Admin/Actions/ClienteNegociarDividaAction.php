@@ -4,108 +4,44 @@ namespace App\Admin\Actions;
 
 use App\Admin\Helpers\Methods;
 use App\Models\Cliente;
-use App\Models\ClienteEmAtraso;
 use App\Models\Reparcelamento;
 use App\Models\ReparcelamentoParcela;
 use App\Models\Venda;
 use App\Models\VendaParcela;
-use Encore\Admin\Actions\RowAction;
+use Carbon\Carbon;
 use Encore\Admin\Admin;
+use Encore\Admin\Widgets\Form;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use Throwable;
 
-
-class ClienteNegociarDividaAction extends RowAction
+class ClienteNegociarDividaAction extends Form
 {
     public $name = 'Renegociar Dívidas';
     private $reparcelamento;
+    private $id;
 
-    public function handle(Model $model, Request $request): \Encore\Admin\Actions\Response
+    public function criar(Request $request): \Encore\Admin\Actions\Response
     {
-        $id = $this->row()->getKey();
-        $cliente = Cliente::find($id);
-        $valorTotal = Methods::toFloat($request->input('valor_total' . $id));
-        $entrada = Methods::toFloat($request->input('valor_entrada' . $id));
-        $parcelas = $request->input('parcelas' . $id);
-        $vencimento = $request->input('primeiro_vencimento' . $id);
+        $this->id = $request->input('cliente');
+        $cliente = Cliente::find($this->id);
+        $valorTotal = Methods::toFloat($request->input('valor_total'));
+        $entrada = Methods::toFloat($request->input('valor_entrada'));
+        $parcelas = $request->input('parcelas');
+        $vencimento = $request->input('primeiro_vencimento');
 
         DB::beginTransaction();
         try {
-                $this->reparcelamento = $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
-                $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
-                $this->quitarParcelasMaisVendas($cliente);
+            $this->reparcelamento = $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
+            $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
+            $this->quitarParcelasMaisVendas($cliente);
 
             DB::commit();
-            return $this->response()->success('Renegociação criada com sucesso!' )->refresh();
+            return $this->response()->success('Renegociação criada com sucesso!' );
         } catch (Throwable $e) {
             DB::rollback();
             return $this->response()->error($e);
         }
-    }
-
-    public function form(Model $model): void
-    {
-        $id = $this->row()->getKey();
-        $cliente = Cliente::find($id);
-        $totalEmdividas = $cliente->totalEmDividas(true);
-
-        Admin::script(
-                "$('#valor_negociado{$id}').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true});
-            $('#valor_entrada{$id}').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true
-            });
-            $('#valor_total{$id}').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true
-            });
-        ");
-
-        $this->select('cliente', 'Cliente',)
-            ->options([
-                $id => $cliente->nome . ' - ' . $totalEmdividas
-            ])
-            ->required()
-            ->value($id);
-
-        $this->date('primeiro_vencimento' . $id, 'Vencimento da primeira parcela')
-            ->required()
-            ->attribute(['autocomplete' => 'off']);
-
-        $this->select('parcelas' . $id, 'Selecione a quantidade de parcelas')
-            ->options([
-                1 => '1x', 2 => '2x', 3 => '3x', 4 => '4x', 5 => '5x', 6 => '6x',
-                7 => '7x', 8 => '8x', 9 => '9x', 10 => '10x', 11 => '11x', 12 => '12x',
-                13 => '13x', 14 => '14x', 15 => '15x', 16 => '16x', 17 => '17x', 18 => '18x',
-                19 => '19x', 20 => '20x', 21 => '21x', 22 => '22x', 23 => '23x', 24 => '24x',
-            ])
-            ->required()
-            ->attribute(['autocomplete' => 'off']);
-
-        $this->text('valor_negociado'. $id ,'Valor Negociação')
-            ->attribute(['autocomplete' => 'off'])
-            ->required()
-            ->value($totalEmdividas);
-
-        $this->text('valor_entrada'. $id , 'Entrada')
-            ->attribute(['autocomplete' => 'off'])
-            ->value('0,00');
-
-        $this->text('valor_total'. $id , 'Total')
-            ->required()
-            ->attribute(['autocomplete' => 'off'])
-            ->value($totalEmdividas);
     }
 
     /**
@@ -181,5 +117,4 @@ class ClienteNegociarDividaAction extends RowAction
             $vencimento->addMonth(1);
         }
     }
-
 }
