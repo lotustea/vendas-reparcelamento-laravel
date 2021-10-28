@@ -9,38 +9,34 @@ use App\Models\ReparcelamentoParcela;
 use App\Models\Venda;
 use App\Models\VendaParcela;
 use Carbon\Carbon;
-use Encore\Admin\Admin;
-use Encore\Admin\Widgets\Form;
-use Illuminate\Database\Eloquent\Model;
+use Encore\Admin\Actions\Action;
+use Encore\Admin\Form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ClienteNegociarDividaAction extends Form
 {
     public $name = 'Renegociar Dívidas';
     private $reparcelamento;
-    private $id;
 
-    public function criar(Request $request): \Encore\Admin\Actions\Response
+    public function criar(Request $request)
     {
-        $this->id = $request->input('cliente');
-        $cliente = Cliente::find($this->id);
+        $cliente = $this->model();
         $valorTotal = Methods::toFloat($request->input('valor_total'));
         $entrada = Methods::toFloat($request->input('valor_entrada'));
         $parcelas = $request->input('parcelas');
         $vencimento = $request->input('primeiro_vencimento');
 
-        DB::beginTransaction();
         try {
             $this->reparcelamento = $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
             $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
             $this->quitarParcelasMaisVendas($cliente);
 
-            DB::commit();
-            return $this->response()->success('Renegociação criada com sucesso!' );
+            admin_success('Renegociação criada com sucesso!');
+            return redirect('admin/reparcelamentos/'. $this->reparcelamento->id);
         } catch (Throwable $e) {
-            DB::rollback();
-            return $this->response()->error($e);
+            admin_error('Erro ao criar renegociação', $e->getMessage());
         }
     }
 
@@ -48,16 +44,16 @@ class ClienteNegociarDividaAction extends Form
      * Busca e quita todas as parcelas e vendas em atraso do cliente
      * @param Cliente $cliente
      */
-    private function quitarParcelasMaisVendas(Cliente $cliente): void
+    private function quitarParcelasMaisVendas($cliente): void
     {
         $vendas = $cliente->vendas();
         foreach ($vendas as $venda) {
-            $venda = Venda::find($venda->id);
+            $venda = Venda::find($venda->id)->first();
             $parcelas = $venda->parcelas();
             $venda->status = 1;
             $venda->save();
             foreach ($parcelas as $parcela){
-                $parcela = VendaParcela::find($parcela->id);
+                $parcela = VendaParcela::find($parcela->id)->first();
                 $parcela->status = 1;
                 $parcela->valor_pago = $parcela->valor_extra + $parcela->valor_total;
                 $parcela->save();
@@ -74,7 +70,7 @@ class ClienteNegociarDividaAction extends Form
      * @param $parcelas
      * @return Reparcelamento
      */
-    private function criarReparcelamento(Cliente $cliente, $valorTotal, $entrada, $parcelas): Reparcelamento
+    private function criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas): Reparcelamento
     {
         $novoReparcelamento = new Reparcelamento();
         $novoReparcelamento->cliente_id = $cliente->id;
@@ -108,7 +104,7 @@ class ClienteNegociarDividaAction extends Form
         for ($i = 0; $i < $parcelas; $i++) {
             $parcela = new ReparcelamentoParcela();
             $parcela->reparcelamento_id = $this->reparcelamento->id;
-            $parcela->numero_parcela = $i;
+            $parcela->numero_parcela = $i+1;
             $parcela->valor_total = $valorParcela;
             $parcela->vencimento = $vencimento;
             $parcela->status = 0;

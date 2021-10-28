@@ -200,41 +200,25 @@ class ReparcelamentoController extends AdminController
     protected function form($cliente)
     {
         $form = new Form(new Reparcelamento());
+        $form->setAction('/admin/reparcelamentos/efetuar-negociacao');
 
         $cliente = Cliente::find($cliente);
-        $totalEmdividas = 35;
+        $totalEmdividas = $cliente->totalEmDividas($cliente, true);
 
-        Admin::script(
-            "$('#valor_negociado').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true});
-            $('#valor_entrada').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true
-            });
-            $('#valor_total').maskMoney({
-                  prefix:'R$ ',
-                  allowNegative: true,
-                  thousands:'.', decimal:',',
-                  affixesStay: true
-            });
-        ");
 
-        $form->radio('cliente', 'Cliente',)
+        $form->radio('cliente_nome', 'Cliente')
             ->options([
                 $cliente->id => $cliente->nome . ' - Valor total devido: ' . $totalEmdividas
             ])
             ->default($cliente->id)
             ->rules('required')->disable();
 
+        $form->hidden('cliente', 'Cliente')->value($cliente->id);
+
         $form->datetime('primeiro_vencimento', 'Vencimento da primeira parcela')
             ->placeholder('Selecione a data')
             ->format('DD-MM-YY')
-            ->rules('required');
+            ->required();
 
         $form->select('parcelas', 'Quantidade de parcelas')
             ->options([
@@ -244,13 +228,13 @@ class ReparcelamentoController extends AdminController
                 19 => '19x', 20 => '20x', 21 => '21x', 22 => '22x', 23 => '23x', 24 => '24x',
             ])
             ->placeholder('Selecione a quantidade de parcelas')
-            ->rules('required')
+            ->required()
             ->attribute(['autocomplete' => 'off']);
 
         $form->text('valor_negociado','Valor Negociação')
             ->placeholder('Digite o valor negociado com o cliente')
             ->attribute(['autocomplete' => 'off'])
-            ->rules('required');
+            ->required();
 
         $form->text('valor_entrada', 'Entrada')
             ->placeholder('Digite o valor de entrada, se houver')
@@ -258,7 +242,7 @@ class ReparcelamentoController extends AdminController
 
         $form->text('valor_total', 'Total')
             ->placeholder('Valor total da negociação')
-            ->rules('required')
+            ->required()
             ->attribute(['autocomplete' => 'off']);
 
         return $form;

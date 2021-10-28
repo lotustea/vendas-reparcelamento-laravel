@@ -19,4 +19,5 @@
  */
 
 Encore\Admin\Form::forget(['map', 'editor']);
-Admin::js('https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/2.1.2/jquery.maskMoney.js');
+Admin::js('https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js');
+Admin::js('js/reparcelar.js');
