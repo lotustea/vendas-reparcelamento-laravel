@@ -78,7 +78,7 @@ class ClienteEmAtrasoController extends AdminController
                 $id = $this->getKey();
                 return  "
                                 <a
-                                    href='reparcelamentos/criar/cliente/{$id}'
+                                    href='/admin/reparcelamentos/criar/cliente/{$id}'
                                     class='btn btn-sm btn-default'
                                     title='Reparcelar'
                                 >
