@@ -98,7 +98,7 @@ class ClienteNegociarDividaAction extends Form
         $valorDivisao = $valorTotal / $parcelas;
         $valorMultiplicacao = $parcelas * $valorDivisao;
         $restante = $valorTotal - $valorMultiplicacao;
-        $valorParcela = ($valorTotal + $restante) / $parcelas; //t
+        $valorParcela = ($valorTotal + $restante) / $parcelas;
 
         $vencimento = Carbon::parse($vencimento);
         for ($i = 0; $i < $parcelas; $i++) {
