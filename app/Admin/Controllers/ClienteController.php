@@ -8,6 +8,7 @@ use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Illuminate\Http\Request;
 
 class ClienteController extends AdminController
 {
@@ -30,7 +31,6 @@ class ClienteController extends AdminController
         $grid->filter(function($filter){
             $filter->disableIdFilter();
             $filter->like('nome', 'Nome');
-            //$filter->
         });
         $grid->column('id', __('Id'));
         $grid->column('nome', __('Nome'));
@@ -96,7 +96,6 @@ class ClienteController extends AdminController
         $show->field('complemento_comercial', __('Complemento comercial'));
         $show->field('indicacao', __('Indicacao'));
         $show->field('data_nascimento', __('Data nascimento'));
-        $show->field('senha', __('Senha'));
 
         return $show;
     }
@@ -135,4 +134,11 @@ class ClienteController extends AdminController
 
         return $form;
     }
+    public function clientes(Request $request)
+    {
+        $q = $request->get('q');
+
+        return Cliente::where('nome', 'like', "%$q%")->paginate(null, ['id', 'nome as text']);
+    }
+
 }

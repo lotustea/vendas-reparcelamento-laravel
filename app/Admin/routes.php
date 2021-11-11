@@ -24,6 +24,7 @@ Route::group([
         return Cliente::totalDividendos(true);
     });
     $router->resource('clientes', ClienteController::class);
+    $router->get('api/clientes', 'ClienteController@clientes');
 
     $router->resource('clientes-em-atraso', ClienteEmAtrasoController::class);
 
