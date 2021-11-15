@@ -40,13 +40,6 @@ class ClienteController extends AdminController
         $grid->column('estado', __('Estado'));
         $grid->column('cidade', __('Cidade'));
         $grid->column('indicacao', __('Indicacao'));
-        $grid->column('dividas', 'Total em dívidas')->display(
-            function () {
-                $id = $this->getKey();
-                $cliente = Cliente::find($id);
-                return $cliente->totalEmDividas($cliente, true);
-            }
-        )->label('danger');
         $grid->column('reparcelar', 'Reparcelar dívidas')->display(
             function () {
                 $id = $this->getKey();

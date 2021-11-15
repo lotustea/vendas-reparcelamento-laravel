@@ -2,15 +2,20 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\ReparcelamentoParcelaPagarAction;
+use App\Admin\Helpers\Methods;
+use App\Admin\Selectable\Produtos;
 use App\Admin\Tables\ParcelasTable;
 use App\Models\Cliente;
 use App\Models\Venda;
+use Carbon\Carbon;
 use Encore\Admin\Admin;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
 Use Encore\Admin\Widgets\Table;
+use Illuminate\Http\Request;
 
 class VendaController extends AdminController
 {
@@ -30,14 +35,35 @@ class VendaController extends AdminController
     {
         $grid = new Grid(new Venda());
 
-        $grid->column('id', __('Id'));
-        $grid->column('id_cliente', __('Id cliente'));
-        $grid->column('total', __('Total'));
-        $grid->column('entrada', __('Entrada'));
-        $grid->column('parcelas_vendas', 'Parcelas');
+        $grid->filter(function($filter){
+            $filter->disableIdFilter();
+            $filter->where(function ($query) {
+                $query->whereHas('cliente', function ($query) {
+                    $query->where('nome', 'like', "%{$this->input}%");
+                });
+            }, 'Cliente');
+        });
+
+        $grid->column('id_cliente','Cliente')->display(function ($cliente) {
+            return Cliente::find($cliente)->nome;
+        });
+
+        $grid->column('data_compra', __('Data compra'))->display(function ($data) {
+            return  Carbon::parse($data)->format('d/m/Y') .' - '. Carbon::parse($data)->diffForHumans();
+        });
+
+        $grid->column('total', __('Valor total'))->display(function ($valor) {
+            return 'R$ ' . Methods::toReal($valor);
+        });
+
+        $grid->column('entrada', __('Entrada'))->display(function ($entrada) {
+            return 'R$ ' . Methods::toReal($entrada);
+        });
+
         new ParcelasTable($grid->column('parcelas_vendas', 'Parcelas'));
-        $grid->column('data_compra', __('Data compra'));
-        $grid->column('status', __('Status'));
+
+        $grid->column('status', __('Status'))
+            ->using([0 => 'Em aberto', 1 => 'Pago']);
 
         return $grid;
     }
@@ -52,13 +78,78 @@ class VendaController extends AdminController
     {
         $show = new Show(Venda::findOrFail($id));
 
-        $show->field('id', __('Id'));
-        $show->field('id_cliente', __('Id cliente'));
+        $show->id_cliente('Cliente')->as(function ($cliente){
+            return Cliente::find($cliente)->nome;
+        });
         $show->field('total', __('Total'));
         $show->field('entrada', __('Entrada'));
         $show->field('parcelas', __('Parcelas'));
         $show->field('data_compra', __('Data compra'));
         $show->field('status', __('Status'));
+
+        $hoje = Carbon::now();
+
+        $show->produtos('Produtos', function ($produtos){
+            $produtos->resource('/admin/venda-produtos');
+            $produtos->disableExport();
+            $produtos->disablePagination();
+            $produtos->disableFilter();
+            $produtos->disableRowSelector();
+            $produtos->disableCreateButton();
+            $produtos->disableActions();
+            $produtos->disableColumnSelector();
+
+            $produtos->id_venda()->display(function ($venda){
+
+            })
+            $produtos->nome();
+
+            $produtos->preco()->display(function ($preco) {
+                dd($preco);
+                return 'R$ ' . Methods::toReal($preco);
+            });
+
+        });
+
+        $show->parcelas('Parcelas', function ($parcelas) use ($hoje){
+            $parcelas->resource('/admin/reparcelamento-parcelas');
+            $parcelas->disableExport();
+            $parcelas->disablePagination();
+            $parcelas->disableFilter();
+            $parcelas->disableRowSelector();
+            $parcelas->disableCreateButton();
+            $parcelas->disableActions();
+            $parcelas->disableColumnSelector();
+
+            $parcelas->parcela();
+
+            $parcelas->valor_parcela()->display(function ($valorParcela) {
+                return 'R$ ' . Methods::toReal($valorParcela);
+            });
+
+            $parcelas->vencimento()->display(function ($vencimento) use ($hoje){
+                if(Carbon::parse($vencimento) <= $hoje){
+                    return Carbon::parse($vencimento)->format('d/m/Y - ') . Carbon::parse($vencimento)->diffForHumans() . " - vencido.";
+                }
+                return Carbon::parse($vencimento)->format('d/m/Y - ') . Carbon::parse($vencimento)->diffForHumans();
+
+            });
+
+            $parcelas->valor_pago()->display(function ($valorPago) {
+                return 'R$ ' . Methods::toReal($valorPago);
+            });
+
+            $parcelas->status()->using([0 => 'Em aberto', 1 => 'Pago']);
+
+            $parcelas->pagar()->display(function ($title, $column) {
+                If ($this->status == 1) {
+                    return 'Pago';
+                }
+                return $column->action(ReparcelamentoParcelaPagarAction::class);
+            });
+
+        });
+
 
         return $show;
     }
@@ -78,14 +169,11 @@ class VendaController extends AdminController
 
         $form->select('cliente_nome', 'Cliente')
             ->options(function () {
-                $clientes = Cliente::all();
-                $options = array();
-               foreach ($clientes as $cliente) {
-                    $options[$cliente->id] = $cliente->nome;
-                }
-                return $options;
-            })->ajax('/admin/api/clientes')
+                return Cliente::all()->pluck('nome',"id");
+            })
             ->rules('required');
+
+        $form->belongsToMany('produtos', Produtos::class, 'Produtos');
 
         $form->select('parcelas', 'Quantidade de parcelas')
             ->options([
@@ -118,5 +206,14 @@ class VendaController extends AdminController
             ->attribute(['autocomplete' => 'off']);
 
         return $form;
+    }
+
+    /**
+     * @param Request $request
+     */
+    public function calcularValorCompra(Request $request)
+    {
+
+        return dd(collect($request->input('produtos')));
     }
 }

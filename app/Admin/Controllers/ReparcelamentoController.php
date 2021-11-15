@@ -76,7 +76,7 @@ class ReparcelamentoController extends AdminController
         });
         $grid->column('entrada', __('Entrada'))->display(function ($entrada) {
             return 'R$ ' . Methods::toReal($entrada);
-        });;
+        });
         $grid->column('status', __('Status'))
             ->using([0 => 'Em aberto', 1 => 'Pago']);
 

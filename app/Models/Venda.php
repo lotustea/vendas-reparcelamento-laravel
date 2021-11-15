@@ -21,7 +21,7 @@ class Venda extends Model
 
     public function produtos()
     {
-        return $this->belongsToMany(Produto::class, 'venda_produto', 'id_venda');
+        return $this->hasMany(VendaProduto::class, 'id_venda');
     }
 
     public function parcelas()

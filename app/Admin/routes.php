@@ -29,6 +29,7 @@ Route::group([
     $router->resource('clientes-em-atraso', ClienteEmAtrasoController::class);
 
     $router->resource('vendas', VendaController::class);
+    $router->post('api/vendas/calcular-valor-compra', 'VendaController@calcularValorCompra');
 
     $router->resource('venda-parcelas', VendaParcelaController::class);
 
