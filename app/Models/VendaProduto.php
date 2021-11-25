@@ -17,6 +17,6 @@ class VendaProduto extends Model
     }
     public function produto()
     {
-        return $this->belongsToMany(Produto::class, 'produtos', 'id_produto');
+        return $this->belongsToMany(Produto::class, 'produtos', 'id_produto', '');
     }
 }

@@ -2,7 +2,10 @@
 
 namespace App\Admin\Actions;
 
+use App\Admin\Controllers\ReparcelamentoController;
 use App\Admin\Helpers\Methods;
+use App\Models\Reparcelamento;
+use App\Models\Venda;
 use Carbon\Carbon;
 use Encore\Admin\Actions\BatchAction;
 use Encore\Admin\Actions\RowAction;
@@ -25,10 +28,19 @@ class ReparcelamentoParcelaPagarAction extends RowAction
             return $this->response()->error('Erro. Valor do pagamento é inferior ao valor da parcela!');
         }
 
+        $reparcelamento = $parcela->reparcelamento()->get();
+
         $parcela->status = 1;
         $parcela->valor_pago = $valorPagamento;
         $parcela->data_pagamento = Carbon::now();
         $parcela->save();
+
+        if ($parcela->numero_parcela === $reparcelamento[0]->parcelas) {
+            $reparcelamento = Reparcelamento::find($reparcelamento[0]->id);
+            $reparcelamento->status = 1;
+            $reparcelamento->save();
+        }
+
 
         return $this->response()->success('Pagamento efetuado com sucesso!' )->refresh();
 

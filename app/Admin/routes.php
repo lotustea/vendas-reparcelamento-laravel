@@ -43,9 +43,9 @@ Route::group([
         return (new App\Admin\Controllers\ReparcelamentoController())->criar($id, $content);
     });
 
-    $router->post('reparcelamentos/efetuar-negociacao',  function (Request $request) {
-        $this->id = $request->input('cliente');
-        $cliente = Cliente::find($this->id);
+    $router->post('reparcelamentos/criar-negociacao',  function (Request $request) {
+        $id = $request->input('cliente');
+        $cliente = Cliente::find($id);
         return (new ClienteNegociarDividaAction($cliente))->criar($request);
     });
 

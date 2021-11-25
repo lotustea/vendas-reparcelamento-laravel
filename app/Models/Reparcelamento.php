@@ -11,7 +11,7 @@ class Reparcelamento extends Model
 
     public function parcelas()
     {
-        return $this->hasMany(ReparcelamentoParcela::class, 'reparcelamento_id');
+        return $this->hasMany(ReparcelamentoParcela::class);
     }
 
     public function cliente()

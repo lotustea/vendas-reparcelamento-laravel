@@ -7,6 +7,7 @@ use App\Admin\Helpers\Methods;
 use App\Admin\Selectable\Produtos;
 use App\Admin\Tables\ParcelasTable;
 use App\Models\Cliente;
+use App\Models\Produto;
 use App\Models\Venda;
 use Carbon\Carbon;
 use Encore\Admin\Admin;
@@ -78,16 +79,19 @@ class VendaController extends AdminController
     {
         $show = new Show(Venda::findOrFail($id));
 
-        $show->id_cliente('Cliente')->as(function ($cliente){
-            return Cliente::find($cliente)->nome;
-        });
-        $show->field('total', __('Total'));
-        $show->field('entrada', __('Entrada'));
-        $show->field('parcelas', __('Parcelas'));
-        $show->field('data_compra', __('Data compra'));
-        $show->field('status', __('Status'));
+        $show->id_cliente('Cliente')
+            ->as(function ($cliente)
+            {
+                return Cliente::find($cliente)->nome;
+            });
 
         $hoje = Carbon::now();
+
+        $show->field('data_compra', __('Data compra'))
+            ->as(function ($data)
+            {
+                return Carbon::parse($data)->format('d/m/Y - ') . Carbon::parse($data)->diffForHumans();
+            });
 
         $show->produtos('Produtos', function ($produtos){
             $produtos->resource('/admin/venda-produtos');
@@ -99,17 +103,28 @@ class VendaController extends AdminController
             $produtos->disableActions();
             $produtos->disableColumnSelector();
 
-            $produtos->id_venda()->display(function ($venda){
-
-            })
             $produtos->nome();
 
             $produtos->preco()->display(function ($preco) {
-                dd($preco);
                 return 'R$ ' . Methods::toReal($preco);
             });
 
         });
+        $show->field('total', __('Total'))
+            ->as(function ($total)
+            {
+                return 'R$ ' . Methods::toReal($total);
+            });
+        $show->field('entrada', __('Entrada'))
+            ->as(function ($entrada)
+            {
+                return 'R$ ' . Methods::toReal($entrada);
+            });
+        $show->field('parcelas', __('Parcelas'))
+            ->as(function ($parcelas)
+            {
+                return $parcelas . 'x';
+            });
 
         $show->parcelas('Parcelas', function ($parcelas) use ($hoje){
             $parcelas->resource('/admin/reparcelamento-parcelas');
@@ -149,6 +164,9 @@ class VendaController extends AdminController
             });
 
         });
+
+        $show->field('status', __('Status'))
+            ->using([0 => 'Em aberto', 1 => 'Pago']);
 
 
         return $show;

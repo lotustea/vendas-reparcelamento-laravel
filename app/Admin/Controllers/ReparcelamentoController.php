@@ -178,19 +178,6 @@ class ReparcelamentoController extends AdminController
             ->body($this->form($id));
     }
 
-    public function reparcelar($id)
-    {
-        $cliente = Cliente::find($id);
-        $totalEmdividas = $cliente->totalEmDividas($cliente, true);
-        $content =  (new Content())
-            ->title('Reparcelamento de dívidas')
-            ->body(new ReparcelarForm(
-                ['id' => $id, 'valor_negociado' => $totalEmdividas, 'valor_total'  => $totalEmdividas]
-            ));
-        if ($result = session('success')) {
-            $content->row('<pre>'.json_encode($result).'</pre>');
-        }
-    }
 
     /**
      * Make a form builder.
@@ -200,7 +187,7 @@ class ReparcelamentoController extends AdminController
     protected function form($cliente)
     {
         $form = new Form(new Reparcelamento());
-        $form->setAction('/admin/reparcelamentos/efetuar-negociacao');
+        $form->setAction('/admin/reparcelamentos/criar-negociacao');
 
         $cliente = Cliente::find($cliente);
         $totalEmdividas = $cliente->totalEmDividas($cliente, true);
