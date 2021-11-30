@@ -34,7 +34,7 @@ function calcularValorCompra(){
             valorTotal.val('Carregando...')
         },
         success : function(data) {
-            valorCompra.maskMoney('mask', data)
+            valorCompra.val(data)
 
             valorTotal.maskMoney('mask', valorCompra.maskMoney('unmasked')[0] - valorEntrada.maskMoney('unmasked')[0]);
         },

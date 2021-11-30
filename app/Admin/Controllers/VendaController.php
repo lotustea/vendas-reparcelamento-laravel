@@ -212,7 +212,8 @@ class VendaController extends AdminController
         $form->text('valor_compra','Valor Compra')
             ->placeholder('Valor da compra')
             ->attribute(['autocomplete' => 'off'])
-            ->required();
+            ->required()
+            ->disable();
 
         $form->text('valor_entrada', 'Entrada')
             ->placeholder('Digite o valor de entrada, se houver')
@@ -221,7 +222,8 @@ class VendaController extends AdminController
         $form->text('valor_total', 'Total')
             ->placeholder('Valor total da compra')
             ->required()
-            ->attribute(['autocomplete' => 'off']);
+            ->attribute(['autocomplete' => 'off'])
+            ->disable();
 
         return $form;
     }
