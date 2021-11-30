@@ -1,3 +1,6 @@
+var valorCompra = $('#valor_compra');
+var valorEntrada = $('#valor_entrada');
+var valorTotal = $('#valor_total');
 
 $('#valor_total').maskMoney({
     prefix:'R$ ',
@@ -16,9 +19,6 @@ $('#valor_compra').maskMoney({
 });
 
 function calcularValorCompra(){
-    let valorCompra = $('#valor_compra');
-    let valorEntrada = $('#valor_entrada');
-    let valorTotal = $('#valor_total');
     $.ajax({
         url : '/admin/api/vendas/calcular-valor-compra',
         type : 'POST',
@@ -51,5 +51,12 @@ $(document).ready(function (){
     $('.table').click(function() {
         calcularValorCompra()
     });
+    $('#valor_entrada').on('change', function() {
+        valorTotal.maskMoney('mask', valorCompra.maskMoney('unmasked')[0] - valorEntrada.maskMoney('unmasked')[0]);
+    });
+    $('#valor_entrada').on('keyup', function() {
+        valorTotal.maskMoney('mask', valorCompra.maskMoney('unmasked')[0] - valorEntrada.maskMoney('unmasked')[0]);
+    });
+
 })
 
