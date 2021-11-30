@@ -229,9 +229,15 @@ class VendaController extends AdminController
     /**
      * @param Request $request
      */
-    public function calcularValorCompra(Request $request)
+    public function calcularValorCompra(Request $request): string
     {
+        $produtos = collect($request->input('produtos'));
+        $valorCompra = 00.00;
 
-        return dd(collect($request->input('produtos')));
+        if (isset($produtos)){
+            $valorCompra = (float)Produto::find($produtos)->sum('preco');
+        }
+
+        return Methods::toReal($valorCompra);
     }
 }

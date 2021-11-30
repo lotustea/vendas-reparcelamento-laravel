@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class VendasTimeStamps extends Migration
+class VendaTimestamps extends Migration
 {
     /**
      * Run the migrations.
@@ -25,6 +25,6 @@ class VendasTimeStamps extends Migration
      */
     public function down()
     {
-
+        //
     }
 }

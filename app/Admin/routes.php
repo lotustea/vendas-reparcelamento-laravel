@@ -2,6 +2,7 @@
 
 
 use App\Admin\Actions\ClienteNegociarDividaAction;
+use App\Admin\Actions\CriarVendaAction;
 use App\Admin\Controllers\ReparcelamentoParcelaController;
 use App\Admin\Forms\ReparcelarForm;
 use App\Models\Cliente;
@@ -30,6 +31,11 @@ Route::group([
 
     $router->resource('vendas', VendaController::class);
     $router->post('api/vendas/calcular-valor-compra', 'VendaController@calcularValorCompra');
+    $router->post('vendas/criar-venda',  function (Request $request) {
+        $id = $request->input('cliente');
+        $cliente = Cliente::find($id);
+        return (new CriarVendaAction($cliente))->criar($request);
+    });
 
     $router->resource('venda-parcelas', VendaParcelaController::class);
 
