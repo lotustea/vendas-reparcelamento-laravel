@@ -24,7 +24,7 @@ class CriarVendaAction extends Form
         $cliente = $this->model();
         $valorCompra = $this->calcularValorCompra(collect($request->input('produtos')));
         $entrada = Methods::toFloat($request->input('valor_entrada'));
-        $valorTotal = $valorCompra - $entrada;
+        $valorTotal = (float)$valorCompra - (float)$entrada;
         $parcelas = $request->input('parcelas');
         $vencimento = $request->input('primeiro_vencimento');
         $produtos = $request->input('produtos');
