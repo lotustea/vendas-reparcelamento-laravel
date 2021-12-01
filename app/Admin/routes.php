@@ -31,8 +31,11 @@ Route::group([
 
     $router->resource('vendas', VendaController::class);
     $router->post('api/vendas/calcular-valor-compra', 'VendaController@calcularValorCompra');
+    $router->get('vendas/create', function (\Encore\Admin\Layout\Content $content) {
+        return (new App\Admin\Controllers\VendaController())->criar($content);
+    });
     $router->post('vendas/criar-venda',  function (Request $request) {
-        $id = $request->input('cliente');
+        $id = $request->input('cliente_nome');
         $cliente = Cliente::find($id);
         return (new CriarVendaAction($cliente))->criar($request);
     });

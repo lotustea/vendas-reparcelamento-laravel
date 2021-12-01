@@ -4,8 +4,10 @@ namespace App\Admin\Actions;
 
 use App\Admin\Helpers\Methods;
 use App\Models\Cliente;
+use App\Models\Produto;
 use App\Models\Venda;
 use App\Models\VendaParcela;
+use App\Models\VendaProduto;
 use Carbon\Carbon;
 use Encore\Admin\Actions\Action;
 use Encore\Admin\Form;
@@ -15,49 +17,70 @@ use Throwable;
 
 class CriarVendaAction extends Form
 {
-    public $name = 'Criar Venda';
     private $venda;
 
     public function criar(Request $request)
     {
         $cliente = $this->model();
-        $valorTotal = Methods::toFloat($request->input('valor_total'));
+        $valorCompra = $this->calcularValorCompra(collect($request->input('produtos')));
         $entrada = Methods::toFloat($request->input('valor_entrada'));
+        $valorTotal = $valorCompra - $entrada;
         $parcelas = $request->input('parcelas');
         $vencimento = $request->input('primeiro_vencimento');
+        $produtos = $request->input('produtos');
 
         try {
-            $this->venda = $this->criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas);
+            $this->venda = $this->criarVenda($cliente, $produtos, $valorTotal, $entrada, $parcelas);
             $this->criarParcelas($valorTotal, $entrada, $vencimento, $parcelas);
 
-            admin_success('Renegociação criada com sucesso!');
-            return redirect('admin/reparcelamentos/'. $this->venda->id);
+            admin_success('Venda criada com sucesso!');
+            return redirect('admin/vendas/'. $this->venda->id);
         } catch (Throwable $e) {
-            admin_error('Erro ao criar renegociação', $e->getMessage());
+            admin_error('Erro ao criar venda', $e->getMessage());
         }
     }
 
+    private function calcularValorCompra ($produtos) {
+        $valorCompra = 00.00;
+
+        if (isset($produtos)){
+            $valorCompra = (float)Produto::find($produtos)->sum('preco');
+        }
+
+        return Methods::toFloat($valorCompra);
+    }
+
     /**
-     * Cria o venda a partir da negociação
+     * Cria a venda a partir da negociação
      *
-     * @param Cliente $cliente
+     * @param $cliente
      * @param $valorTotal
      * @param $entrada
      * @param $parcelas
      * @return Venda
      */
-    private function criarReparcelamento($cliente, $valorTotal, $entrada, $parcelas): Venda
+    private function criarVenda($cliente, $produtos, $valorTotal, $entrada, $parcelas): Venda
     {
-        $novoReparcelamento = new Venda();
-        $novoReparcelamento->cliente_id = $cliente->id;
-        $novoReparcelamento->entrada = $entrada;
-        $novoReparcelamento->parcelas = $parcelas;
-        $novoReparcelamento->valor_total = $valorTotal;
-        $novoReparcelamento->vendas_abatidas = $cliente->vendas()->get()->toJson();
-        $novoReparcelamento->status = 0;
-        $novoReparcelamento->save();
+        $novaVenda = new Venda();
+        $novaVenda->id_cliente = $cliente->id;
+        $novaVenda->entrada = $entrada;
+        $novaVenda->parcelas = $parcelas;
+        $novaVenda->total = $valorTotal;
+        $novaVenda->status = 0;
+        $novaVenda->data_compra = Carbon::today()->format('Y-m-d');
+        $novaVenda->save();
 
-        return $novoReparcelamento;
+        foreach ($produtos as $produto){
+            if (isset($produto)) {
+                $vendaProduto = new VendaProduto();
+                $vendaProduto->id_venda = $novaVenda->id;
+                $vendaProduto->id_produto = $produto;
+                $vendaProduto->quantidade = 1;
+                $vendaProduto->save();
+            }
+        }
+
+        return $novaVenda;
     }
 
     /**
@@ -79,9 +102,9 @@ class CriarVendaAction extends Form
         $vencimento = Carbon::parse($vencimento);
         for ($i = 0; $i < $parcelas; $i++) {
             $parcela = new VendaParcela();
-            $parcela->reparcelamento_id = $this->venda->id;
-            $parcela->numero_parcela = $i+1;
-            $parcela->valor_total = $valorParcela;
+            $parcela->id_venda = $this->venda->id;
+            $parcela->parcela = $i+1;
+            $parcela->valor_parcela = $valorParcela;
             $parcela->vencimento = $vencimento;
             $parcela->status = 0;
             $parcela->save();

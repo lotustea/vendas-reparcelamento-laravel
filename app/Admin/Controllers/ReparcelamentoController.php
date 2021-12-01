@@ -192,8 +192,6 @@ class ReparcelamentoController extends AdminController
         $cliente = Cliente::find($cliente);
         $totalEmdividas = $cliente->totalEmDividas($cliente, true);
 
-        Admin::js('js/reparcelar.js');
-
         $form->radio('cliente_nome', 'Cliente')
             ->options([
                 $cliente->id => $cliente->nome . ' - Valor total devido: ' . $totalEmdividas

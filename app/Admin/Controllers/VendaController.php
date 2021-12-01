@@ -9,11 +9,13 @@ use App\Admin\Tables\ParcelasTable;
 use App\Models\Cliente;
 use App\Models\Produto;
 use App\Models\Venda;
+use App\Models\VendaParcela;
 use Carbon\Carbon;
 use Encore\Admin\Admin;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
+use Encore\Admin\Layout\Content;
 use Encore\Admin\Show;
 Use Encore\Admin\Widgets\Table;
 use Illuminate\Http\Request;
@@ -173,6 +175,22 @@ class VendaController extends AdminController
     }
 
     /**
+     * Create interface.
+     *
+     * @param Request $request
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function criar(Content $content)
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description['create'] ?? trans('admin.create'))
+            ->body($this->form());
+    }
+
+    /**
      * Make a form builder.
      *
      * @return Form
@@ -181,9 +199,7 @@ class VendaController extends AdminController
     {
         $form = new Form(new Venda());
 
-        $form->setAction('/admin/vendas/criar-venda');
-
-        Admin::js('js/venda.js');
+        $form->setAction('/admin/vendas/criar-venda/');
 
         $form->select('cliente_nome', 'Cliente')
             ->options(function () {
@@ -242,4 +258,6 @@ class VendaController extends AdminController
 
         return Methods::toReal($valorCompra);
     }
+
+
 }
