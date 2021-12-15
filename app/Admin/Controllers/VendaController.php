@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Admin\Actions\ReparcelamentoParcelaPagarAction;
+use App\Admin\Actions\VendaParcelaPagarAction;
 use App\Admin\Helpers\Methods;
 use App\Admin\Selectable\Produtos;
 use App\Admin\Tables\ParcelasTable;
@@ -162,7 +163,7 @@ class VendaController extends AdminController
                 If ($this->status == 1) {
                     return 'Pago';
                 }
-                return $column->action(ReparcelamentoParcelaPagarAction::class);
+                return $column->action(VendaParcelaPagarAction::class);
             });
 
         });

@@ -13,7 +13,7 @@ class TimeProduto extends Migration
      */
     public function up()
     {
-        Schema::table('produto', function (Blueprint $table) {
+        Schema::table('produtos', function (Blueprint $table) {
             $table->timestamps();
         });
     }

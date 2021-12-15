@@ -31,7 +31,8 @@ class VendasTable
                         ->map(function ($venda) {
                             $venda['acao'] = "
                                 <a
-                                    href='http://fabiwj.web282.uni5.net/editar-venda-{$venda['id']}'
+                                    href='/admin/vendas/{$venda['id']}'
+                                    target='_blank'
                                     class='btn btn-sm btn-info'
                                     title='Ver'
                                 >
